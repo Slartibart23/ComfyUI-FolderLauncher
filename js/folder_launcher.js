@@ -208,19 +208,19 @@ class FolderLauncherNode extends LGraphNode {
   }
 
   _createRow(entry) {
-    const handle = el("span", { className: "fl-handle", textContent: "⠿", title: "Ziehen zum Umsortieren" });
+    const handle = el("span", { className: "fl-handle", textContent: "⠿", title: "Drag to reorder" });
     const name = el("input", {
       className: "fl-name", type: "text", value: entry.name ?? "",
       placeholder: "Name (opt.)", spellcheck: false,
     });
     const path = el("input", {
       className: "fl-path", type: "text", value: entry.path ?? "",
-      placeholder: "Pfad eingeben oder 📁 auswählen …", spellcheck: false,
+      placeholder: "Type a path or pick one with 📁 …", spellcheck: false,
       title: entry.path ?? "",
     });
-    const pick = el("button", { className: "fl-btn fl-pick", textContent: "📁", title: "Ordner auswählen …" });
-    const open = el("button", { className: "fl-btn fl-open", textContent: "Öffnen", title: "Im Explorer öffnen" });
-    const del = el("button", { className: "fl-btn fl-del", textContent: "✕", title: "Zeile entfernen" });
+    const pick = el("button", { className: "fl-btn fl-pick", textContent: "📁", title: "Select folder …" });
+    const open = el("button", { className: "fl-btn fl-open", textContent: "Open", title: "Open in Explorer" });
+    const del = el("button", { className: "fl-btn fl-del", textContent: "✕", title: "Remove row" });
 
     const row = el("div", { className: "fl-row" }, handle, name, path, pick, open, del);
     row._entry = entry;
@@ -281,11 +281,11 @@ class FolderLauncherNode extends LGraphNode {
   async _pickEntry(entry) {
     const res = await post("/folder_launcher/pick", { start: cleanPath(entry.path) });
     if (res.data?.busy) {
-      toast("info", "Folder Launcher", "Es ist bereits ein Auswahldialog offen.");
+      toast("info", "Folder Launcher", "A folder picker is already open.");
       return;
     }
     if (!res.ok) {
-      toast("error", "Ordnerauswahl fehlgeschlagen", res.data?.error);
+      toast("error", "Folder picker failed", res.data?.error);
       return;
     }
     const chosen = res.data?.path;
@@ -312,7 +312,7 @@ class FolderLauncherNode extends LGraphNode {
       if (res.status === 404) this._setValid(entry, false);
       flash(row._path);
     }
-    toast("error", res.status === 404 ? "Ordner nicht gefunden" : "Öffnen fehlgeschlagen",
+    toast("error", res.status === 404 ? "Folder not found" : "Failed to open folder",
       res.status === 404 ? p : res.data?.error);
   }
 
@@ -352,7 +352,7 @@ class FolderLauncherNode extends LGraphNode {
     const row = this._rowFor.get(entry);
     if (!row) return;
     row.classList.toggle("fl-invalid", !valid);
-    row._path.title = valid ? (entry.path ?? "") : `Ordner nicht gefunden: ${entry.path}`;
+    row._path.title = valid ? (entry.path ?? "") : `Folder not found: ${entry.path}`;
   }
 
   // ---- Reorder via drag & drop ------------------------------------------

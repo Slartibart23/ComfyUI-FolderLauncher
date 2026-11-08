@@ -23,7 +23,7 @@ A ComfyUI custom node that **opens any number of your own folders in Windows Exp
 
 ## Features
 
-- 📂 **Open folders with one click**: **Öffnen** (Open) launches Windows Explorer in the given folder (or press **Enter** in the path field)
+- 📂 **Open folders with one click**: **Open** launches Windows Explorer in the given folder (or press **Enter** in the path field)
 - ➕ **Grows automatically**: once the last path is filled in, a new empty row is added below
 - 📁 **Pick a folder**: the button opens the standard Windows folder dialog; you can also type or paste a path
 - 🏷️ **Optional name** per row, e.g. "Outputs" or "LoRAs"
@@ -62,7 +62,7 @@ Then **restart ComfyUI** and reload the browser. Nothing else to install.
 1. Double-click the canvas and search for **Folder Launcher** (category `utils`)
 2. Type or paste a path into the first row, or pick one with **📁**
 3. Optionally give it a name on the left
-4. Click **Öffnen** (Open): Explorer opens the folder
+4. Click **Open**: Explorer opens the folder
 
 | Element | Function |
 |---|---|
@@ -70,7 +70,7 @@ Then **restart ComfyUI** and reload the browser. Nothing else to install.
 | Name | Optional label |
 | Path | Folder path; red = folder does not exist |
 | 📁 | Open the Windows folder picker |
-| Öffnen | Open the folder in Explorer (also via Enter) |
+| Open | Open the folder in Explorer (also via Enter) |
 | ✕ | Remove the row |
 
 ---

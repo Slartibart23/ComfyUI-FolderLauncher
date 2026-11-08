@@ -165,7 +165,7 @@ def _create_owner_window(user32):
     return hwnd
 
 
-def pick_folder_windows(start: str = "", title: str = "Ordner auswählen"):
+def pick_folder_windows(start: str = "", title: str = "Select folder"):
     """Shows the modern Windows folder picker. Returns the path or None."""
     ole32 = ctypes.WinDLL("ole32")
     shell32 = ctypes.WinDLL("shell32")
@@ -197,7 +197,7 @@ def pick_folder_windows(start: str = "", title: str = "Ordner auswählen"):
             ctypes.byref(dialog),
         )
         if _hr_failed(hr):
-            raise OSError(f"CoCreateInstance fehlgeschlagen (0x{hr & 0xFFFFFFFF:08X})")
+            raise OSError(f"CoCreateInstance failed (0x{hr & 0xFFFFFFFF:08X})")
 
         opts = ctypes.c_uint()
         _com_method(dialog, _GET_OPTIONS, ctypes.POINTER(ctypes.c_uint))(ctypes.byref(opts))
@@ -218,7 +218,7 @@ def pick_folder_windows(start: str = "", title: str = "Ordner auswählen"):
         if (hr & 0xFFFFFFFF) == HRESULT_CANCELLED:
             return None
         if _hr_failed(hr):
-            raise OSError(f"Dialog fehlgeschlagen (0x{hr & 0xFFFFFFFF:08X})")
+            raise OSError(f"Folder dialog failed (0x{hr & 0xFFFFFFFF:08X})")
 
         hr = _com_method(dialog, _GET_RESULT, ctypes.POINTER(ctypes.c_void_p))(
             ctypes.byref(result_item))
@@ -248,7 +248,7 @@ def pick_folder_windows(start: str = "", title: str = "Ordner auswählen"):
 
 def pick_folder(start: str = ""):
     if not IS_WINDOWS:
-        raise OSError("Die Ordnerauswahl ist nur unter Windows verfügbar.")
+        raise OSError("The folder picker is only available on Windows.")
     return pick_folder_windows(start)
 
 
@@ -268,7 +268,7 @@ async def folder_launcher_open(request):
     data = await _json_body(request)
     path = normalize_path(data.get("path"))
     if not path or not os.path.isdir(path):
-        return web.json_response({"ok": False, "error": "Ordner nicht gefunden"}, status=404)
+        return web.json_response({"ok": False, "error": "Folder not found"}, status=404)
     try:
         open_in_explorer(path)
     except Exception as e:  # noqa: BLE001
@@ -282,7 +282,7 @@ async def folder_launcher_pick(request):
     data = await _json_body(request)
     if not _pick_lock.acquire(blocking=False):
         return web.json_response({"ok": False, "busy": True,
-                                  "error": "Ein Auswahldialog ist bereits geöffnet"})
+                                  "error": "A folder picker is already open"})
     try:
         loop = asyncio.get_running_loop()
         path = await loop.run_in_executor(None, pick_folder, data.get("start", ""))
