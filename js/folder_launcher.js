@@ -1,6 +1,6 @@
-// Folder Launcher – reine Frontend-Node (wie "Note").
-// Beliebig viele Ordner-Zeilen; jede Zeile öffnet ihren Ordner im Windows Explorer.
-// Die Liste wird in node.properties.folders gespeichert und landet damit im Workflow.
+// Folder Launcher – frontend-only node (like "Note").
+// Any number of folder rows; each row opens its folder in Windows Explorer.
+// The list is stored in node.properties.folders and is therefore saved with the workflow.
 
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
@@ -63,7 +63,7 @@ async function post(url, body) {
       body: JSON.stringify(body),
     });
     let data = {};
-    try { data = await res.json(); } catch { /* leer */ }
+    try { data = await res.json(); } catch { /* empty */ }
     return { ok: res.ok, status: res.status, data };
   } catch (e) {
     return { ok: false, status: 0, data: { error: String(e) } };
@@ -82,7 +82,7 @@ function toast(severity, summary, detail) {
 
 function flash(el) {
   el.classList.remove("fl-flash");
-  void el.offsetWidth; // Animation neu starten
+  void el.offsetWidth; // restart the animation
   el.classList.add("fl-flash");
 }
 
@@ -106,8 +106,8 @@ class FolderLauncherNode extends LGraphNode {
     this.serialize_widgets = false;
     this.properties = this.properties || {};
     this.properties.folders = [];
-    // Eigene Liste (node.properties ist im neuen Frontend ein reaktiver Proxy,
-    // dort wären Objekt-Vergleiche unzuverlässig). Wird per _sync() gespiegelt.
+    // Own list (node.properties is a reactive proxy in the new frontend, where
+    // object identity comparisons are unreliable). Mirrored via _sync().
     this._entries = [];
 
     this._rowFor = new Map();   // entry -> row element
@@ -122,12 +122,12 @@ class FolderLauncherNode extends LGraphNode {
     requestAnimationFrame(() => this._fitHeight());
   }
 
-  // ---- Daten -------------------------------------------------------------
+  // ---- Data -------------------------------------------------------------
   get _folders() {
     return this._entries;
   }
 
-  /** Schreibt die Liste als einfache Kopie in node.properties (-> Workflow). */
+  /** Writes a plain copy of the list to node.properties (-> workflow). */
   _sync() {
     this.properties.folders = this._entries.map((e) => ({ name: e.name ?? "", path: e.path ?? "" }));
   }
@@ -136,7 +136,7 @@ class FolderLauncherNode extends LGraphNode {
     return !cleanPath(entry.path);
   }
 
-  /** Sorgt dafür, dass ganz unten immer genau eine leere Zeile zum Ausfüllen steht. */
+  /** Makes sure there is always exactly one empty row at the bottom. */
   _ensureTrailingBlank() {
     const f = this._folders;
     const last = f[f.length - 1];
@@ -159,11 +159,11 @@ class FolderLauncherNode extends LGraphNode {
     app.graph?.change?.();
   }
 
-  // ---- Aufbau ------------------------------------------------------------
+  // ---- UI ---------------------------------------------------------------
   _buildWidget() {
     this._list = el("div", { className: "fl-list" });
     this._root = el("div", { className: "fl-root" }, this._list);
-    // ComfyUI zieht oben und unten je "margin" von der Widget-Höhe ab.
+    // ComfyUI subtracts "margin" at the top and bottom from the widget height.
     const h = () => this._contentHeight() + WIDGET_MARGIN * 2;
     this._widget = this.addDOMWidget("folders", "folder_launcher", this._root, {
       serialize: false,
@@ -180,7 +180,7 @@ class FolderLauncherNode extends LGraphNode {
     return PAD * 2 + n * ROW_H + (n - 1) * ROW_GAP;
   }
 
-  // Eigene Mindestgröße: exakt so hoch wie die Zeilen (Standard-Berechnung ist zu großzügig).
+  // Own minimum size: exactly as tall as the rows (the default calculation is too generous).
   computeSize() {
     const top = this._widget?.y || 2;
     return [MIN_WIDTH, top + this._contentHeight() + WIDGET_MARGIN * 2 + 6];
@@ -239,7 +239,7 @@ class FolderLauncherNode extends LGraphNode {
       this._afterPathChanged(entry);
     });
 
-    // Windows "Als Pfad kopieren" liefert Anführungszeichen mit – beim Verlassen entfernen.
+    // Windows "Copy as path" adds quotes – strip them when leaving the field.
     path.addEventListener("change", () => {
       const cleaned = cleanPath(path.value);
       if (cleaned !== path.value) {
@@ -266,7 +266,7 @@ class FolderLauncherNode extends LGraphNode {
     return row;
   }
 
-  // ---- Aktionen ----------------------------------------------------------
+  // ---- Actions ----------------------------------------------------------
   _afterPathChanged(entry) {
     const added = this._ensureTrailingBlank();
     if (added) {
@@ -289,7 +289,7 @@ class FolderLauncherNode extends LGraphNode {
       return;
     }
     const chosen = res.data?.path;
-    if (!chosen) return; // abgebrochen
+    if (!chosen) return; // cancelled
     const row = this._rowFor.get(entry);
     entry.path = chosen;
     if (row) {
@@ -332,7 +332,7 @@ class FolderLauncherNode extends LGraphNode {
     this._markChanged();
   }
 
-  // ---- Ordner-Prüfung (rote Markierung) ----------------------------------
+  // ---- Folder check (red highlight) -------------------------------------
   _scheduleCheck(entry, delay = 350) {
     clearTimeout(this._checkTimers.get(entry));
     this._checkTimers.set(entry, setTimeout(async () => {
@@ -343,7 +343,7 @@ class FolderLauncherNode extends LGraphNode {
         return;
       }
       const res = await post("/folder_launcher/check", { paths: [p] });
-      // Nur übernehmen, wenn der Pfad sich in der Zwischenzeit nicht geändert hat.
+      // Only apply if the path has not changed in the meantime.
       if (res.ok && cleanPath(entry.path) === p) this._setValid(entry, !!res.data?.exists?.[0]);
     }, delay));
   }
@@ -355,7 +355,7 @@ class FolderLauncherNode extends LGraphNode {
     row._path.title = valid ? (entry.path ?? "") : `Ordner nicht gefunden: ${entry.path}`;
   }
 
-  // ---- Umsortieren per Drag & Drop ---------------------------------------
+  // ---- Reorder via drag & drop ------------------------------------------
   _startDrag(e, entry) {
     if (e.button !== 0 || this._isTrailingBlank(entry)) return;
     e.preventDefault();
@@ -370,7 +370,7 @@ class FolderLauncherNode extends LGraphNode {
       const children = [...this._list.children];
       const last = children[children.length - 1];
       const blankRow = last && this._isTrailingBlank(last._entry) ? last : null;
-      let before = blankRow; // nie unter die leere Zeile schieben
+      let before = blankRow; // never move below the empty row
       for (const c of children) {
         if (c === row || c === blankRow) continue;
         const r = c.getBoundingClientRect();
@@ -402,9 +402,9 @@ class FolderLauncherNode extends LGraphNode {
     window.addEventListener("pointercancel", onUp, true);
   }
 
-  // ---- LiteGraph-Hooks ---------------------------------------------------
+  // ---- LiteGraph hooks ---------------------------------------------------
   onConfigure() {
-    // properties.folders wurde aus dem Workflow geladen -> Zeilen neu aufbauen.
+    // properties.folders was loaded from the workflow -> rebuild the rows.
     const saved = Array.isArray(this.properties.folders) ? this.properties.folders : [];
     this._entries = saved.map((x) => ({
       name: typeof x?.name === "string" ? x.name : "",

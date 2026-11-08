@@ -1,15 +1,15 @@
 """
-Folder Launcher - Server-Seite.
+Folder Launcher - server side.
 
-Stellt drei kleine API-Endpunkte bereit, die vom Frontend (js/folder_launcher.js)
-aufgerufen werden:
+Provides three small API endpoints that are called by the frontend
+(js/folder_launcher.js):
 
-  POST /folder_launcher/open   {"path": "..."}       -> Ordner im Explorer öffnen
-  POST /folder_launcher/pick   {"start": "..."}      -> Windows-Ordnerauswahl anzeigen
-  POST /folder_launcher/check  {"paths": ["...", ...]} -> prüfen, welche Ordner existieren
+  POST /folder_launcher/open   {"path": "..."}         -> open folder in Explorer
+  POST /folder_launcher/pick   {"start": "..."}        -> show Windows folder picker
+  POST /folder_launcher/check  {"paths": ["...", ...]} -> check which folders exist
 
-Es werden ausschließlich existierende Ordner geöffnet - keine Dateien, keine
-Programme, und es wird nichts angelegt.
+Only existing folders are opened - no files, no programs, and nothing is
+ever created.
 """
 
 import asyncio
@@ -31,10 +31,10 @@ IS_WINDOWS = sys.platform == "win32"
 
 
 # --------------------------------------------------------------------------- #
-# Hilfsfunktionen
+# Helpers
 # --------------------------------------------------------------------------- #
 def normalize_path(raw) -> str:
-    """Bereinigt eine Pfad-Eingabe (Anführungszeichen, Leerzeichen, Umgebungsvariablen)."""
+    """Cleans up a path input (quotes, whitespace, environment variables)."""
     if not isinstance(raw, str):
         return ""
     p = raw.strip().strip('"').strip("'").strip()
@@ -51,7 +51,7 @@ def is_existing_dir(raw) -> bool:
 
 def open_in_explorer(path: str) -> None:
     if IS_WINDOWS:
-        # Verb "explore" erzwingt den Windows Explorer (keinen anderen Ordner-Handler).
+        # The "explore" verb forces Windows Explorer (no other folder handler).
         os.startfile(path, "explore")
     elif sys.platform == "darwin":
         import subprocess
@@ -62,7 +62,7 @@ def open_in_explorer(path: str) -> None:
 
 
 # --------------------------------------------------------------------------- #
-# Windows-Ordnerauswahl (IFileOpenDialog über ctypes, ohne tkinter)
+# Windows folder picker (IFileOpenDialog via ctypes, no tkinter needed)
 # --------------------------------------------------------------------------- #
 class _GUID(ctypes.Structure):
     _fields_ = [
@@ -90,7 +90,7 @@ FOS_PATHMUSTEXIST = 0x800
 SIGDN_FILESYSPATH = 0x80058000
 HRESULT_CANCELLED = 0x800704C7
 
-# vtable-Indizes
+# vtable indices
 _RELEASE = 2
 _SHOW = 3
 _SET_OPTIONS = 9
@@ -120,10 +120,10 @@ def _hr_failed(hr: int) -> bool:
 
 
 def _create_owner_window(user32):
-    """Unsichtbares, 'topmost' Besitzerfenster an der Mausposition.
+    """Invisible 'topmost' owner window at the mouse position.
 
-    Damit erscheint der Dialog vor dem Browser und auf dem Monitor, auf dem
-    gerade geklickt wurde.
+    Makes the dialog appear in front of the browser and on the monitor where
+    the user just clicked.
     """
     WS_POPUP = 0x80000000
     WS_EX_TOPMOST = 0x00000008
@@ -144,8 +144,8 @@ def _create_owner_window(user32):
     if not hwnd:
         return None
 
-    # Vordergrund-Sperre umgehen: kurz an den Eingabe-Thread des aktuellen
-    # Vordergrundfensters (Browser) koppeln.
+    # Work around the foreground lock: briefly attach to the input thread of
+    # the current foreground window (the browser).
     user32.GetForegroundWindow.restype = wintypes.HWND
     user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.c_void_p]
     user32.GetWindowThreadProcessId.restype = wintypes.DWORD
@@ -166,7 +166,7 @@ def _create_owner_window(user32):
 
 
 def pick_folder_windows(start: str = "", title: str = "Ordner auswählen"):
-    """Zeigt den modernen Windows-Ordnerauswahldialog. Gibt Pfad oder None zurück."""
+    """Shows the modern Windows folder picker. Returns the path or None."""
     ole32 = ctypes.WinDLL("ole32")
     shell32 = ctypes.WinDLL("shell32")
     user32 = ctypes.WinDLL("user32")
@@ -253,7 +253,7 @@ def pick_folder(start: str = ""):
 
 
 # --------------------------------------------------------------------------- #
-# Routen
+# Routes
 # --------------------------------------------------------------------------- #
 async def _json_body(request) -> dict:
     try:
@@ -272,7 +272,7 @@ async def folder_launcher_open(request):
     try:
         open_in_explorer(path)
     except Exception as e:  # noqa: BLE001
-        log.warning("Folder Launcher: Öffnen fehlgeschlagen: %s", e)
+        log.warning("Folder Launcher: failed to open folder: %s", e)
         return web.json_response({"ok": False, "error": str(e)}, status=500)
     return web.json_response({"ok": True, "path": path})
 
@@ -287,7 +287,7 @@ async def folder_launcher_pick(request):
         loop = asyncio.get_running_loop()
         path = await loop.run_in_executor(None, pick_folder, data.get("start", ""))
     except Exception as e:  # noqa: BLE001
-        log.warning("Folder Launcher: Auswahl fehlgeschlagen: %s", e)
+        log.warning("Folder Launcher: folder picker failed: %s", e)
         return web.json_response({"ok": False, "error": str(e)}, status=500)
     finally:
         _pick_lock.release()

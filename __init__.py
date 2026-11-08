@@ -1,12 +1,12 @@
 """
 ComfyUI Folder Launcher
 
-Eine reine Frontend-Node (wie "Note"), die beliebig viele Windows-Ordner
-per Knopfdruck im Explorer öffnet. Die Python-Seite stellt nur die
-API-Endpunkte zum Öffnen, Auswählen und Prüfen bereit.
+A frontend-only node (like "Note") that opens any number of Windows folders
+in Explorer with one click. The Python side only provides the API endpoints
+for opening, picking and checking folders.
 """
 
-from . import folder_launcher  # noqa: F401  (registriert die API-Routen)
+from . import folder_launcher  # noqa: F401  (registers the API routes)
 
 NODE_CLASS_MAPPINGS = {}
 NODE_DISPLAY_NAME_MAPPINGS = {}
