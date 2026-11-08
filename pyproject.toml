@@ -1,0 +1,21 @@
+[project]
+name = "comfyui-folderlauncher"
+description = "Open any number of custom Windows folders in Explorer with one click, directly from a ComfyUI node. Rows grow automatically, can be named, reordered by drag & drop and are saved with the workflow."
+version = "1.0.0"
+license = { file = "LICENSE" }
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = []
+classifiers = [
+    "Operating System :: Microsoft :: Windows",
+]
+
+[project.urls]
+Repository = "https://github.com/Slartibart23/ComfyUI-FolderLauncher"
+Documentation = "https://github.com/Slartibart23/ComfyUI-FolderLauncher#readme"
+"Bug Tracker" = "https://github.com/Slartibart23/ComfyUI-FolderLauncher/issues"
+
+[tool.comfy]
+PublisherId = "slartibart23b"
+DisplayName = "Folder Launcher"
+Icon = ""
